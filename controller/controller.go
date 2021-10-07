@@ -74,8 +74,8 @@ func makeRequest(){
 	fmt.Println("URL:>", url)
 
 	requestBody,err := json.Marshal(map[string]interface{}{
-		"query": "{\n  traces(\n    type: API_TRACE\n    limit: 200\n    between: {startTime: \"2021-10-07T09:36:02.526Z\", endTime: \"2021-10-07T09:51:02.526Z\"}\n    offset: 0\n    filterBy: [{operator: EQUALS, value: \"e2ef8e5d-1cdb-3ff5-ab3e-203279920399\", type: ID, idType: API}, {key: \"statusCode\", operator: EQUALS, value: \"200\", type: ATTRIBUTE}]\n  ) {\n    results {\n      id\n      requestUrl: attribute(key: \"requestUrl\")\n      apiExitCalls: attribute(key: \"apiExitCalls\")\n      apiCalleeNameCount: attribute(key: \"apiCalleeNameCount\")\n      status: attribute(key: \"status\")\n      statusCode: attribute(key: \"statusCode\")\n      statusMessage: attribute(key: \"statusMessage\")\n      apiTraceErrorSpanCount: attribute(key: \"apiTraceErrorSpanCount\")\n      duration: attribute(key: \"duration\")\n      startTime: attribute(key: \"startTime\")\n      __typename\n    }\n    total\n    __typename\n  }\n}\n",
-	})
+		"query": "{\\n  spans(\\n    limit: 1000\\n    between: {startTime: \\\"2021-10-05T13:18:03.590Z\\\", endTime: \\\"2021-10-05T14:18:03.590Z\\\"}\\n    filterBy: [{operator: EQUALS, value: \\\"8ab7f71bf02d0eff\\\", type: ID, idType: API_TRACE }]\\n    orderBy: [{ key: \\\"duration\\\"}]\\n  ) {\\n    results {\\n      id\\n      logEvents {\\n        results {\\n          attributes: attribute(key: \\\"attributes\\\")\\n          timestamp: attribute(key: \\\"timestamp\\\")\\n          summary: attribute(key: \\\"summary\\\")\\n          __typename\\n        }\\n        __typename\\n      }\\n      displayEntityName: attribute(key: \\\"displayEntityName\\\")\\n      displaySpanName: attribute(key: \\\"displaySpanName\\\")\\n      duration: attribute(key: \\\"duration\\\")\\n      endTime: attribute(key: \\\"endTime\\\")\\n      parentSpanId: attribute(key: \\\"parentSpanId\\\")\\n      protocolName: attribute(key: \\\"protocolName\\\")\\n      spanTags: attribute(key: \\\"spanTags\\\")\\n      startTime: attribute(key: \\\"startTime\\\")\\n      type: attribute(key: \\\"type\\\")\\n      errorCount: attribute(key: \\\"errorCount\\\")\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n",
+		})
 	if err!=nil{
 		fmt.Println("Unable To Marshal")
 		return
@@ -116,4 +116,3 @@ func postMessage(c * gin.Context){
 	fmt.Printf("Message sent successfully to channel %s at %s" , channelId, timestamp)
 
 }
-

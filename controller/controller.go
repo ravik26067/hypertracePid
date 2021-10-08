@@ -4,12 +4,16 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+	"strconv"
+	"strings"
+	"time"
+
+	//"github.com/joho/godotenv"
 	"github.com/slack-go/slack"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
+	//"os"
 )
 
 func getInput(){
@@ -17,78 +21,60 @@ func getInput(){
 }
 
 func RunServer() {
-	makeRequest()
+	//makeRequest()
+	startServer()
 }
 
 func startServer(){
 	r := gin.Default()
 	userRoute := r.Group("/razorpay")
-	userRoute.GET("/", postMessage)
+	userRoute.POST("/", postMessage)
 
 	if err := r.Run(":5000"); err != nil {
 		log.Fatal(err.Error())
 	}
 }
 
-func configs(){
-
-	err := godotenv.Load("environment.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	http.HandleFunc("/receive", slashCommandHandler)
-
-	fmt.Println("[INFO] Server listening")
-	http.ListenAndServe(":8080", nil)
-}
-
-func slashCommandHandler(w http.ResponseWriter, r *http.Request) {
-	s, err := slack.SlashCommandParse(r)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if !s.ValidateToken(os.Getenv("SLACK_VERIFICATION_TOKEN")) {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	switch s.Command {
-	case "/hyperint":
-		params := &slack.Msg{Text: s.Text}
-		fmt.Printf("Response Text: %v",params.Text)
-		response := fmt.Sprintf("Response %v", params.Text)
-		w.Write([]byte(response))
-
-	default:
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-}
 
 func postMessage(c * gin.Context){
-	api:= slack.New("abc")
+	api:= slack.New("xoxb-2533926746038-2570903409222-eT2G8yJ4xvd5UeSJIzsI0WTS")
 
 	r:=c.Request
 	s, err := slack.SlashCommandParse(r)
 
 	fmt.Println("value of s: ",s.Text)
 
+	to:= time.Now()
+	from:= time.Now()
 
 	switch s.Command {
 	case "/hyperint":
 		params := &slack.Msg{Text: s.Text}
-		fmt.Printf("Response Text: %v",params.Text)
+		//fmt.Printf("Response Text: %v",params.Text)
+		paramsString := string(params.Text)
+		fields:=strings.Fields(paramsString)
+		diff, _ := strconv.Atoi(fields[2])
+		from = to.Add(time.Duration(diff) * -1 * time.Minute)
 
 	default:
 		fmt.Println("Internal server error")
 		return
 	}
+	/**
+	Time related changes
+	 */
+	fromTime := strconv.Itoa(from.Hour()) + ":" + strconv.Itoa(from.Minute())
+	toTime := strconv.Itoa(to.Hour()) + ":" + strconv.Itoa(to.Minute())
+
+	p99Latency:=10
+	p50Latency:=7
+	errorPercent:=2
+
+
+	messageString:= "*From*: "+ fromTime +" *To*: " + toTime +"\n*p99 Latency*:"+ strconv.Itoa(p99Latency) +"s \n*p50 latency*:" + strconv.Itoa(p50Latency) + "s \n*Error percent*:"+strconv.Itoa(errorPercent) +" \n*Slowest step*: REDIS (internal)\n*Increased status_code*: 504 Gateway Timeout\n\n*Links*:\n*<https://hypertrace-ui.razorpay.com/endpoints/endpoint/e2ef8e5d-1cdb-3ff5-ab3e-203279920399/overview?time=15m | Hypertrace>* \n*<https://vajra.razorpay.com/d/TgCiFZJGza/core-routes?viewPanel=41&orgId=1 |Route vajra dashboard>* "
 
 	channelId,timestamp,err := api.PostMessage("C02GZQ3U3S7",
-		slack.MsgOptionText("Hello World",false))
+		slack.MsgOptionText(messageString,false))
 
 	if err!=nil{
 		fmt.Println("%s\n" ,err)
